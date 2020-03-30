@@ -32,7 +32,7 @@ open class ChatController: UIViewController, WKNavigationDelegate, WKScriptMessa
     private var callJs: Array<String>!
     private var didFinish: Bool = false
         
-    override public func loadView() {
+    override open func loadView() {
         let contentController = WKUserContentController()
         contentController.add(self, name: "chatInterface")
 
