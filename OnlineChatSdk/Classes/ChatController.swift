@@ -1,16 +1,8 @@
-//
-//  ChatController.swift
-//  OnlineChatSdk
-//
-//  Created by Andrew Blinov on 22/03/2019.
-//  Copyright © 2019 Andrew Blinov. All rights reserved.
-//
-
 import UIKit
 import WebKit
 import AVFoundation
 
-open class ChatController: UIViewController, WKNavigationDelegate, WKScriptMessageHandler{
+open class ChatController: UIViewController, WKNavigationDelegate, WKScriptMessageHandler {
     
     public static let event_operatorSendMessage = "operatorSendMessage";
     public static let event_clientSendMessage = "clientSendMessage";
@@ -31,39 +23,26 @@ open class ChatController: UIViewController, WKNavigationDelegate, WKScriptMessa
     public var chatView: WKWebView!
     private var callJs: Array<String>!
     private var didFinish: Bool = false
-        
+    
     override open func loadView() {
         let contentController = WKUserContentController()
         contentController.add(self, name: "chatInterface")
-
+        
         let preferences = WKPreferences()
         preferences.javaScriptEnabled = true
         preferences.javaScriptCanOpenWindowsAutomatically = true
-
+        
         let config = WKWebViewConfiguration()
         config.userContentController = contentController
         config.preferences = preferences
-
-        var frame = UIScreen.main.bounds
         
+        var frame = UIScreen.main.bounds
         if self.parent != nil && self.parent?.view != nil && self.parent?.view.bounds != nil {
             frame = (self.parent?.view.bounds)!
         }
-        
         self.chatView = WKWebView(frame: frame, configuration: config)
         self.chatView.navigationDelegate = self
         self.view = self.chatView
-
-    }
-    
-    public func webView(_ webView: WKWebView, didFinish navigation: WKNavigation!) {
-        self.didFinish = true
-        if self.callJs != nil && !self.callJs.isEmpty {
-            for script in self.callJs {
-                callJs(script)
-            }
-            self.callJs = nil
-        }
     }
     
     private func getCallJsMethod(_ name: String, params: Array<Any>) -> String {
@@ -103,7 +82,7 @@ open class ChatController: UIViewController, WKNavigationDelegate, WKScriptMessa
         return "{}"
     }
     
-    public func load(_ id: String, _ domain: String, _ language: String = "", _ clientId: String = "") {
+    public func load(_ id: String, _ domain: String, language: String = "", clientId: String = "") {
         var setup: Dictionary<String, Any> = [:]
         if !language.isEmpty {
             setup["language"] = language
@@ -121,7 +100,7 @@ open class ChatController: UIViewController, WKNavigationDelegate, WKScriptMessa
         if url == nil {
             url = URL(string: surl)
         }
-
+        
         self.chatView.load(URLRequest(url: url!))
         self.chatView.allowsBackForwardNavigationGestures = true
     }
@@ -173,13 +152,11 @@ open class ChatController: UIViewController, WKNavigationDelegate, WKScriptMessa
         if message.name != "chatInterface" {
             return
         }
-
         let jsonBody = (message.body as! String).data(using: .utf8)!
         let body = try? (JSONSerialization.jsonObject(with: jsonBody, options: .mutableLeaves) as! NSDictionary)
         if body == nil {
             return
         }
-        
         if body!["name"] == nil {
             return
         }
@@ -189,31 +166,42 @@ open class ChatController: UIViewController, WKNavigationDelegate, WKScriptMessa
         } else {
             data = [:]
         }
+        
+        if (!self.didFinish) {
+            if self.callJs != nil && !self.callJs.isEmpty {
+                for script in self.callJs {
+                    callJs(script)
+                }
+                self.callJs = nil
+            }
+            self.didFinish = true
+        }
+        
         let name = body!["name"] as! String
         switch name {
-            case ChatController.event_clientId:
-                onClientId(data!["clientId"] != nil ? data!["clientId"] as! String : "")
-                break
-            case ChatController.event_sendRate:
-                onSendRate(data!)
-                break
-            case ChatController.event_contactsUpdated:
-                onContactsUpdated(data!)
-                break
-            case ChatController.event_clientSendMessage:
-                onClientSendMessage(data!)
-                break
-            case ChatController.event_clientMakeSubscribe:
-                onClientMakeSubscribe(data!)
-                break
-            case ChatController.event_operatorSendMessage:
-                onOperatorSendMessage(data!)
-                break
-            case ChatController.method_getContacts:
-                getContactsCallback(data!)
-                break
-            default:
-                break
+        case ChatController.event_clientId:
+            onClientId(data!["clientId"] != nil ? data!["clientId"] as! String : "")
+            break
+        case ChatController.event_sendRate:
+            onSendRate(data!)
+            break
+        case ChatController.event_contactsUpdated:
+            onContactsUpdated(data!)
+            break
+        case ChatController.event_clientSendMessage:
+            onClientSendMessage(data!)
+            break
+        case ChatController.event_clientMakeSubscribe:
+            onClientMakeSubscribe(data!)
+            break
+        case ChatController.event_operatorSendMessage:
+            onOperatorSendMessage(data!)
+            break
+        case ChatController.method_getContacts:
+            getContactsCallback(data!)
+            break
+        default:
+            break
         }
         onEvent(name, data!)
     }
