@@ -138,7 +138,7 @@ open class ChatController: UIViewController, WKNavigationDelegate, WKScriptMessa
     }
     
     public func callJsSetClientInfo(_ jsonInfo: String) {
-        callJsMethod(ChatController.method_setClientInfo, params: [jsonInfo])
+        callJsMethod(ChatController.method_setClientInfo, params: [Command(jsonInfo)])
     }
     
     public func callJsSetTarget(_ reason: String) {
